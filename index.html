@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pohyb po mřížce</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="grid-container">
+            <div class="grid" id="grid"></div>
+        </div>
+        <div class="commands">
+            <h2>Příkazy</h2>
+            <textarea id="commands" placeholder="Zadejte příkazy jako: krokvpřed 3, probarvi Č..." rows="5"></textarea>
+            <button onclick="processCommands()">Spustit</button>
+            <button onclick="resetGrid()">Reset</button>
+            <div class="guide">
+                <h3>Dostupné příkazy:</h3>
+                <ul>
+                    <li><strong>krokvpřed N</strong> - pohyb nahoru o N kroků</li>
+                    <li><strong>krokvzad N</strong> - pohyb dolů o N kroků</li>
+                    <li><strong>vlevo N</strong> - pohyb doleva o N kroků</li>
+                    <li><strong>vpravo N</strong> - pohyb doprava o N kroků</li>
+                    <li><strong>probarvi X</strong> - vybarví aktuální buňku (Č - červená, M - modrá, B - bílá)</li>
+                    <li><strong>reset</strong> - vymaže celou mřížku</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gridSize = 10;
+        const grid = document.getElementById('grid');
+        let position = { x: 4, y: 4 };
+        let direction = '→';
+        const directions = { krokvpřed: '↑', krokvzad: '↓', vlevo: '←', vpravo: '→' };
+        const coloredCells = new Map(); // Mapování souřadnic na barvy
+
+        const colors = { Č: 'red', M: 'blue', B: 'white' };
+
+        // Funkce pro vytvoření mřížky
+        function createGrid() {
+            grid.innerHTML = '';
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.x = j;
+                    cell.dataset.y = i;
+
+                    // Nastavení barvy, pokud existuje
+                    const cellColor = coloredCells.get(`${i},${j}`);
+                    if (cellColor) {
+                        cell.style.backgroundColor = cellColor;
+                    }
+
+                    // Nastavení aktivní buňky
+                    if (i === position.y && j === position.x) {
+                        cell.textContent = direction;
+                        cell.classList.add('active');
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // Funkce pro zpracování příkazů
+        function processCommands() {
+            const commands = document.getElementById('commands').value.toLowerCase().split(',');
+
+            commands.forEach(command => {
+                command = command.trim();
+                const parts = command.split(' ');
+
+                // Pohyb
+                if (parts[0] in directions) {
+                    const steps = parseInt(parts[1]) || 1;
+                    for (let i = 0; i < steps; i++) {
+                        if (parts[0] === 'krokvpřed' && position.y > 0) position.y--;
+                        if (parts[0] === 'krokvzad' && position.y < gridSize - 1) position.y++;
+                        if (parts[0] === 'vlevo' && position.x > 0) position.x--;
+                        if (parts[0] === 'vpravo' && position.x < gridSize - 1) position.x++;
+                    }
+                    direction = directions[parts[0]];
+                }
+
+                // Probarvení
+                if (parts[0] === 'probarvi' && parts[1] in colors) {
+                    coloredCells.set(`${position.y},${position.x}`, colors[parts[1]]);
+                }
+
+                // Reset
+                if (command === 'reset') {
+                    coloredCells.clear();
+                }
+            });
+
+            document.getElementById('commands').value = '';
+            createGrid();
+        }
+
+        // Funkce pro reset mřížky
+        function resetGrid() {
+            coloredCells.clear();
+            createGrid();
+        }
+
+        // Inicializace mřížky
+        createGrid();
+    </script>
+</body>
+</html>
